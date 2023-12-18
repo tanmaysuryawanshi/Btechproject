@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -76,58 +79,70 @@ fun MainScreen(
     navController: NavController,
     mainViewModel: MainViewModel = hiltViewModel(),
     city: String?,
-    stage:String
+    stage: String
 ) {
 
 
-ShowData(navController = navController, mainViewModel = mainViewModel, city = city, stage = stage)
+    ShowData(
+        navController = navController,
+        mainViewModel = mainViewModel,
+        city = city,
+        stage = stage
+    )
 
 
-
-
-
-
-    
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShowData(navController: NavController, mainViewModel: MainViewModel, city: String?,stage: String) {
+fun ShowData(
+    navController: NavController,
+    mainViewModel: MainViewModel,
+    city: String?,
+    stage: String
+) {
 
-val weatherData= produceState<DataOrException<Weather, Boolean, Exception>>(
-    initialValue = DataOrException(loading = true)
-){
-    value=mainViewModel.getWeatherData(city = city.toString())
-}.value
+    val weatherData = produceState<DataOrException<Weather, Boolean, Exception>>(
+        initialValue = DataOrException(loading = true)
+    ) {
+        value = mainViewModel.getWeatherData(city = city.toString())
+    }.value
 
 
-    if(weatherData.loading ==true){
+    if (weatherData.loading == true) {
         val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.lottie))
 
-        Box(modifier = Modifier
-            .background(colorResource(id = R.color.cream))
-            .fillMaxSize()){
-            Column(horizontalAlignment = Alignment.CenterHorizontally
-                , verticalArrangement = Arrangement.Center,
+        Box(
+            modifier = Modifier
+                .background(colorResource(id = R.color.cream))
+                .fillMaxSize()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
                 LottieAnimation(
                     modifier = Modifier
-                        .fillMaxSize(0.5f)
-                    , composition =composition , iterations = LottieConstants.IterateForever,
-                    contentScale = ContentScale.Crop)
+                        .fillMaxSize(0.5f),
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    contentScale = ContentScale.Crop
+                )
 
-                Text(text = "AgriShield",
+                Text(
+                    text = "AgriShield",
                     fontSize = 32.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
                     color = colorResource(id = R.color.boxgstart)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Crop Disease Prediction and Cure",
+                Text(
+                    text = "Crop Disease Prediction and Cure",
                     fontSize = 18.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Light,
@@ -139,9 +154,8 @@ val weatherData= produceState<DataOrException<Weather, Boolean, Exception>>(
 
         }
 
-    }
-    else if (weatherData.data !=null){
-        var nightTempZone=1
+    } else if (weatherData.data != null) {
+        var nightTempZone = 1
         when (weatherData.data!!.list[0].temp.night.toInt()) {
             in 0..13 -> nightTempZone = 3
             in 14..17 -> nightTempZone = 2
@@ -159,8 +173,8 @@ val weatherData= produceState<DataOrException<Weather, Boolean, Exception>>(
         }
 
 
-        var humidityZone=3;
-        when(weatherData.data!!.list[0].humidity.toInt()){
+        var humidityZone = 3;
+        when (weatherData.data!!.list[0].humidity.toInt()) {
             in 0..40 -> humidityZone = 4
             in 41..70 -> humidityZone = 2
             else -> humidityZone = 1
@@ -168,9 +182,9 @@ val weatherData= produceState<DataOrException<Weather, Boolean, Exception>>(
 
         }
 
-        var growthStage=stage.trim().toInt();
-        var growthStageZone=3;
-        when(growthStage){
+        var growthStage = stage.trim().toInt();
+        var growthStageZone = 3;
+        when (growthStage) {
             in 0..40 -> growthStageZone = 1
             in 41..65 -> growthStageZone = 2
             in 65..90 -> growthStageZone = 3
@@ -179,10 +193,10 @@ val weatherData= produceState<DataOrException<Weather, Boolean, Exception>>(
         }
 
         val inputFeatures = FloatArray(4)
-        inputFeatures[0]=humidityZone.toFloat();//humidity zone
-        inputFeatures[2]=dayTempZone.toFloat();//day temp zone
-        inputFeatures[3]= nightTempZone.toFloat();//night temp zone
-        inputFeatures[1]=growthStageZone.toFloat();//crop growth zone
+        inputFeatures[0] = humidityZone.toFloat();//humidity zone
+        inputFeatures[2] = dayTempZone.toFloat();//day temp zone
+        inputFeatures[3] = nightTempZone.toFloat();//night temp zone
+        inputFeatures[1] = growthStageZone.toFloat();//crop growth zone
         val model = Cropsmodel.newInstance(LocalContext.current)
 
 // Create a ByteBuffer and load the inputFeatures into it
@@ -205,17 +219,17 @@ val weatherData= produceState<DataOrException<Weather, Boolean, Exception>>(
         val outputValues = outputFeature0.floatArray[0]
 
         model.close()
-        val constraint= roundAndConstrain(outputValues,1,4)
-        var riskOutput=""
-        when (constraint){
-            1-> riskOutput="High Risk "
-            2-> riskOutput="Moderate Risk"
-            3-> riskOutput="Low Risk"
-            4-> riskOutput="No Risk"
+        val constraint = roundAndConstrain(outputValues, 1, 4)
+        var riskOutput = ""
+        when (constraint) {
+            1 -> riskOutput = "High Risk "
+            2 -> riskOutput = "Moderate Risk"
+            3 -> riskOutput = "Low Risk"
+            4 -> riskOutput = "No Risk"
         }
 
 
-   WeatherScreen(navController,weatherData.data!!,riskOutput)
+        WeatherScreen(navController, weatherData.data!!, riskOutput)
 
 
     }
@@ -223,62 +237,86 @@ val weatherData= produceState<DataOrException<Weather, Boolean, Exception>>(
 }
 
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(navController: NavController, data: Weather, riskOutput: String) {
 
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xF6f6f6),
+            Color(0xCDBDE3AC),
+            Color(0x0094D048)
+        )
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(brush = gradientBrush)
+    ) {
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(color = colorResource(id = R.color.cream))){
+        Scaffold()
 
-
-
-
-
-
-            Column(modifier = Modifier
+        {
+        Column(
+            modifier = Modifier.background(gradientBrush)
                 .fillMaxWidth()
-                ) {
-                weatherDetails(navController,data)
+        ) {
+            weatherDetails(navController, data)
 
-                Box(modifier = Modifier
-                    .fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .width(230.dp)
 
                     .padding(16.dp)
-                    .background(Color.White)) {
-                    var text= remember {
-                        mutableStateOf("")
-                    }
-                    val daytemp=data.list[0].feelsLike.day
-                    val nightTemp=data.list[0].feelsLike.night
-                    val humidity=data.list[0].humidity
-                 val cloudiness=data.list[0].clouds
-
-                        text.value=riskOutput
-
-                    Text(text = text.value,
-                        textAlign = TextAlign.Center,
-                   modifier= Modifier
-                       .background(Color.White)
-                       .padding(16.dp)
-                       .fillMaxWidth())
-
+                    .background(gradientBrush)
+            ) {
+                var text = remember {
+                    mutableStateOf("")
                 }
+                val daytemp = data.list[0].feelsLike.day
+                val nightTemp = data.list[0].feelsLike.night
+                val humidity = data.list[0].humidity
+                val cloudiness = data.list[0].clouds
 
+                text.value = riskOutput
 
+                Text(
+                    text = text.value,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .background(gradientBrush)
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight(800),
+                        color = Color(0xFF3E552C),
+
+                        )
+                )
 
             }
 
 
-
         }
+
+    }
+    }
 
 
 }
 
 @Composable
 private fun weatherColumnItem(weatherItem: WeatherItem) {
+
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xF6f6f6),
+            Color(0xCDBDE3AC),
+            Color(0x0094D048)
+        )
+    )
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -286,19 +324,19 @@ private fun weatherColumnItem(weatherItem: WeatherItem) {
             .padding(start = 16.dp)
             .clip(RoundedCornerShape(16.dp))
 
-            .background(Color.White)
+            .background(gradientBrush)
 
 
     ) {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = formatDecimals(weatherItem.temp.day) ,
+            text = formatDecimals(weatherItem.temp.day),
             modifier = Modifier.padding(horizontal = 8.dp),
             fontSize = 14.sp,
             fontFamily = FontFamily.SansSerif,
             color = colorResource(id = R.color.blacktitle)
         )
-        val imageItemUrl="https://openweathermap.org/img/wn/${weatherItem.weather[0].icon}.png"
+        val imageItemUrl = "https://openweathermap.org/img/wn/${weatherItem.weather[0].icon}.png"
         Image(
             painter = rememberAsyncImagePainter(imageItemUrl),
             contentDescription = null,
@@ -328,7 +366,7 @@ private fun weatherDetails(
 ) {
 
 
-    val imageUrl="https://openweathermap.org/img/wn/${data.list[0].weather[0].icon}.png"
+    val imageUrl = "https://openweathermap.org/img/wn/${data.list[0].weather[0].icon}.png"
     ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
 
         val (section1, section2) = createRefs()
@@ -340,7 +378,7 @@ private fun weatherDetails(
                 .clip(RoundedCornerShape(32.dp))
                 .border(width = 1.dp, Color(0xBFffffff))
                 .padding(1.dp)
-                .background(color = colorResource(id = R.color.purple))
+                .background(color =   Color(0xffA9D699))
 
                 .constrainAs(section1) {
                     start.linkTo(parent.start)
@@ -369,14 +407,21 @@ private fun weatherDetails(
                         contentScale = ContentScale.Crop
                     )
 
-                  Text(
-                        text = "${data.city.name} | ${data.city.country}"
-                      , modifier = Modifier
-                          .padding(16.dp)
-                          .clickable { navController.navigate(WeatherScreens.SearchScreen.route) },
-                        fontSize = 16.sp,
+                    Text(
+                        text = data.city.name, modifier = Modifier
+                            .padding(16.dp)
+                            .clickable { navController.navigate(WeatherScreens.SearchScreen.route) },
+
                         fontFamily = FontFamily.SansSerif,
-                        color = colorResource(id = R.color.blacktitle)
+
+                        style = TextStyle(
+                            fontSize = 25.sp,
+
+                            fontWeight = FontWeight(600),
+                            color = Color(0xFFFFFFFF),
+
+                            )
+
 
                     )
                     Image(
@@ -410,13 +455,8 @@ private fun weatherDetails(
                             .clip(RoundedCornerShape(28.dp))
                             .size(200.dp)
                             .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        colorResource(id = R.color.boxgstart),
-                                        colorResource(id = R.color.boxgend)
-                                    )
-                                )
 
+Color(0xff445D48)
                             )
 
                             .constrainAs(box2) {
@@ -440,8 +480,8 @@ private fun weatherDetails(
                             )
 
                             Text(
-                                text = formatDecimals( data.list[0].temp.day)+"\u00B0"
-                                , modifier = Modifier
+                                text = formatDecimals(data.list[0].temp.day) + "\u00B0C",
+                                modifier = Modifier
                                     .padding(16.dp),
                                 fontSize = 65.sp,
                                 fontFamily = FontFamily.SansSerif,
@@ -467,17 +507,17 @@ private fun weatherDetails(
 
 
                     Text(
-                        text = formatDate( data.list[0].dt), modifier = Modifier
+                        text = formatDate(data.list[0].dt), modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
                             .background(color = Color.White)
-                            .padding(8.dp)
+                            .padding(vertical=8.dp, horizontal = 16.dp)
                             .constrainAs(box1) {
                                 start.linkTo(box2.start)
                                 end.linkTo(box2.end)
                                 top.linkTo(box2.top)
                                 bottom.linkTo(box2.top)
                             },
-                        fontSize = 12.sp,
+                        fontSize = 17.sp,
                         fontFamily = FontFamily.SansSerif,
                         color = colorResource(id = R.color.blacktitle)
                     )
@@ -598,5 +638,5 @@ private fun weatherDetails(
 @Preview
 @Composable
 fun appPreview() {
-   // WeatherScreen(weatherData)
+    // WeatherScreen(weatherData)
 }

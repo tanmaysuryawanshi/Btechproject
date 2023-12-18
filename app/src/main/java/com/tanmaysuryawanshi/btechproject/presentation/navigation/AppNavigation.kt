@@ -54,7 +54,21 @@ fun AppNavigation() {
         }
         composable(WeatherScreens.FieldScreen.route) {
             val fieldViewModel = hiltViewModel<FieldViewmodel>()
-            FieldScreen(fieldViewmodel = fieldViewModel, navController = navController)
+            FieldScreen(fieldViewmodel = fieldViewModel, navController = navController, signout =  {
+
+                lifecycleScope.launch {
+                    Log.d("signout clicked", "AppNavigation: ")
+                    googleAuthUiClient.signOut()
+                    Toast.makeText(
+                        applicationContext,
+                        "Signed out",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    navController.popBackStack()
+                    navController.navigate(WeatherScreens.LoginScreen.route)
+                }
+            })
         }
         composable(WeatherScreens.LoginScreen.route) {
             val viewModel = viewModel<SignInViewModel>()

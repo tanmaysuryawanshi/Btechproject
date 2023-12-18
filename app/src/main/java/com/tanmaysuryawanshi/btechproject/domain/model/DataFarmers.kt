@@ -13,6 +13,6 @@ data class DataFarmers (
 data class Fields(
         var fieldName:String="",
         var cropGrowthStage:String="",
-        var place:String="pune"
+        var place:String=""
 
 )
